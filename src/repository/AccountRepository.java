@@ -10,7 +10,7 @@ public interface AccountRepository {
 
     Account accountCreate(String ownerName, String ownerCPF, String password, String bank, String type);
 
-    Account loginAccount(String ownerName, String password);
+    Account loginAccount(String ownerCPF, String password, String  securityCode, String bank);
 
     void transactionAdd(Transaction transaction);
 
@@ -20,7 +20,7 @@ public interface AccountRepository {
 
     Account findByOwnerName(String ownerName);
 
-    Account findByOwnerCPF(String ownerCPF, String securityCode);
+    Account findByOwnerCPF(String ownerCPF);
 
     Transaction toTransfer(double value, String ownerCPF, String securityCode);
 

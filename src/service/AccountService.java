@@ -15,6 +15,7 @@ public class AccountService implements AccountRepository {
 
     private static List<Account> accountsList = new ArrayList<>();
     private BankRepository bankRepository;
+    BankService bankService = new BankService();
 
     public AccountService(BankRepository bankRepository) {
         this.bankRepository = bankRepository;
@@ -53,13 +54,13 @@ public class AccountService implements AccountRepository {
     }
 
     @Override
-    public Account loginAccount(String ownerName, String password) {
+    public Account loginAccount(String ownerCPF, String password, String securityCode, String bankName) {
 
-        if (ownerName.isEmpty() || password.isEmpty()) {
-            throw new InvalidParameterException("Nome e senha são obrigatórios!");
+        if (ownerCPF.isEmpty() || password.isEmpty() || securityCode.isEmpty()) {
+            throw new InvalidParameterException("Todos os campos são obrigatórios!");
         }
 
-        Account account = this.findByOwnerName(ownerName);
+        Account account = this.findByOwnerCPF(ownerCPF);
 
         if (account == null) {
             throw new NotFoundException("Conta com esse nome não existe!");
@@ -71,12 +72,26 @@ public class AccountService implements AccountRepository {
             throw new InvalidParameterException("Senha incorreta!");
 
         }
+
+        String correctSecurityCode = account.getSecurityCode();
+
+        if(!securityCode.equals(account.getSecurityCode())) {
+            throw new InvalidParameterException("Código incorreto!");
+        }
+
+        Bank bank = bankService.findByName(bankName);
+        Boolean compareBankName = account.getBank().equals(bankName);
+
+        if(compareBankName != true || bank == null) {
+            throw new NotFoundException("Conta Inexistente!");
+        }
+
         return account;
     }
 
     @Override
-    public Account findByOwnerCPF(String ownerCPF, String securityCode) {
-        return accountsList.stream().filter(a -> a.getOwnerCPF().equalsIgnoreCase(ownerCPF) && a.getSecurityCode().equals(securityCode)).findFirst().orElse(null);
+    public Account findByOwnerCPF(String ownerCPF) {
+        return accountsList.stream().filter(a -> a.getOwnerCPF().equalsIgnoreCase(ownerCPF)).findFirst().orElse(null);
     }
 
     @Override
@@ -86,7 +101,7 @@ public class AccountService implements AccountRepository {
 
     @Override
     public Transaction toWithdraw(String ownerCPF, String securityCode, double value) {
-        Account accountToWithdraw = this.findByOwnerCPF(ownerCPF, securityCode);
+        Account accountToWithdraw = this.findByOwnerCPF(ownerCPF);
 
         if (accountToWithdraw != null) {
             double balance = accountToWithdraw.getBalance();
@@ -106,7 +121,7 @@ public class AccountService implements AccountRepository {
 
     @Override
     public Transaction toDeposit(String ownerCPF, String securityCode, double value) {
-        Account accountToDeposit = this.findByOwnerCPF(ownerCPF, securityCode);
+        Account accountToDeposit = this.findByOwnerCPF(ownerCPF);
 
         if (accountToDeposit != null) {
             double balance = accountToDeposit.getBalance();
@@ -122,7 +137,7 @@ public class AccountService implements AccountRepository {
 
     @Override
     public Transaction toTransfer(double value, String ownerCPF, String securityCode) {
-        Account accountToTransfer = this.findByOwnerCPF(ownerCPF, securityCode);
+        Account accountToTransfer = this.findByOwnerCPF(ownerCPF);
 
         if (accountToTransfer != null) {
             double balance = accountToTransfer.getBalance();
@@ -147,7 +162,7 @@ public class AccountService implements AccountRepository {
 
     @Override
     public List<Transaction> accountStatement(String ownerCPF, String securityCode) {
-        Account searchedAccount = this.findByOwnerCPF(ownerCPF, securityCode);
+        Account searchedAccount = this.findByOwnerCPF(ownerCPF);
 
         if (searchedAccount.getTransactionsList().size() > 0) {
             return searchedAccount.getTransactionsList();

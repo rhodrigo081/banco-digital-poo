@@ -1,4 +1,3 @@
-import exception.InvalidParameterException;
 import model.Bank;
 import view.BankView;
 
@@ -21,7 +20,7 @@ public class Main {
             switch (option){
                 case 1:
                     Bank logedBank = bankView.bankLoginView();
-                    bankView.accountsList(logedBank);
+                    bankView.accountsListView(logedBank);
                     System.out.println("Pression ENTER para continuar...");
                     input.nextLine();
                     break;

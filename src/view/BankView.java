@@ -1,10 +1,7 @@
 package view;
-
 import model.Bank;
-import repository.BankRepository;
 import service.BankService;
 
-import java.util.List;
 import java.util.Scanner;
 
 public class BankView {
@@ -26,7 +23,7 @@ public class BankView {
         return logedbank;
     }
 
-    public void accountsList(Bank bank){
+    public void accountsListView(Bank bank){
         System.out.println("=================================");
         System.out.println("|\t\t Todas as Contas \t\t|");
         System.out.println("=================================");
