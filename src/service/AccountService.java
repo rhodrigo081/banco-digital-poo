@@ -2,10 +2,7 @@ package service;
 
 import exception.InvalidParameterException;
 import exception.NotFoundException;
-import model.Account;
-import model.CheckingAccount;
-import model.SavingsAccount;
-import model.Transaction;
+import model.*;
 import repository.AccountRepository;
 import repository.BankRepository;
 
@@ -24,8 +21,11 @@ public class AccountService implements AccountRepository {
     }
 
 
+
+
+
     @Override
-    public Account accountCreate(String ownerName, String ownerCPF, String bank, String type) {
+    public Account accountCreate(String ownerName, String ownerCPF, String password, String bank, String type) {
 
         Account account;
         if (ownerName.isEmpty() || ownerCPF.isEmpty() || bank.isEmpty() || type.isEmpty()) {
@@ -41,8 +41,8 @@ public class AccountService implements AccountRepository {
         type = type.toLowerCase();
 
         account = switch (type) {
-            case "corrente" -> new CheckingAccount(ownerName, ownerCPF, bank, type);
-            case "poupanca" -> new SavingsAccount(ownerName, ownerCPF, bank, type);
+            case "corrente" -> new CheckingAccount(ownerName, ownerCPF, password, bank, type);
+            case "poupanca" -> new SavingsAccount(ownerName, ownerCPF, password,bank, type);
             default -> throw new InvalidParameterException("Tipo de Conta Inválido");
         };
 
@@ -53,8 +53,35 @@ public class AccountService implements AccountRepository {
     }
 
     @Override
+    public Account loginAccount(String ownerName, String password) {
+
+        if (ownerName.isEmpty() || password.isEmpty()) {
+            throw new InvalidParameterException("Nome e senha são obrigatórios!");
+        }
+
+        Account account = this.findByOwnerName(ownerName);
+
+        if (account == null) {
+            throw new NotFoundException("Conta com esse nome não existe!");
+        }
+
+        String correctPassword = account.getPassword();
+
+        if (!password.equals(correctPassword)) {
+            throw new InvalidParameterException("Senha incorreta!");
+
+        }
+        return account;
+    }
+
+    @Override
     public Account findByOwnerCPF(String ownerCPF, String securityCode) {
         return accountsList.stream().filter(a -> a.getOwnerCPF().equalsIgnoreCase(ownerCPF) && a.getSecurityCode().equals(securityCode)).findFirst().orElse(null);
+    }
+
+    @Override
+    public Account findByOwnerName(String ownerName) {
+        return accountsList.stream().filter(a -> a.getOwnerName().equals(ownerName)).findFirst().orElse(null);
     }
 
     @Override
@@ -112,7 +139,7 @@ public class AccountService implements AccountRepository {
     @Override
     public void transactionAdd(Transaction transaction) {
         for (Account account : accountsList) {
-            if(account.getAccountID().equalsIgnoreCase(transaction.getAccountID())){
+            if (account.getAccountID().equalsIgnoreCase(transaction.getAccountID())) {
                 account.getTransactionsList().add(transaction);
             }
         }

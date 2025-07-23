@@ -53,8 +53,8 @@ public abstract class Account {
         return bank;
     }
 
-    public String getType() {
-        return type;
+    public String getPassword() {
+        return password;
     }
 
     public Double getBalance() {
