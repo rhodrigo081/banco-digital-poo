@@ -22,9 +22,6 @@ public class AccountService implements AccountRepository {
     }
 
 
-
-
-
     @Override
     public Account accountCreate(String ownerName, String ownerCPF, String password, String bank, String type) {
 
@@ -43,7 +40,7 @@ public class AccountService implements AccountRepository {
 
         account = switch (type) {
             case "corrente" -> new CheckingAccount(ownerName, ownerCPF, password, bank, type);
-            case "poupanca" -> new SavingsAccount(ownerName, ownerCPF, password,bank, type);
+            case "poupanca" -> new SavingsAccount(ownerName, ownerCPF, password, bank, type);
             default -> throw new InvalidParameterException("Tipo de Conta Inválido");
         };
 
@@ -75,14 +72,14 @@ public class AccountService implements AccountRepository {
 
         String correctSecurityCode = account.getSecurityCode();
 
-        if(!securityCode.equals(account.getSecurityCode())) {
+        if (!securityCode.equals(correctSecurityCode)) {
             throw new InvalidParameterException("Código incorreto!");
         }
 
         Bank bank = bankService.findByName(bankName);
         Boolean compareBankName = account.getBank().equals(bankName);
 
-        if(compareBankName != true || bank == null) {
+        if (compareBankName != true || bank == null) {
             throw new NotFoundException("Conta Inexistente!");
         }
 
@@ -100,8 +97,7 @@ public class AccountService implements AccountRepository {
     }
 
     @Override
-    public Transaction toWithdraw(String ownerCPF, String securityCode, double value) {
-        Account accountToWithdraw = this.findByOwnerCPF(ownerCPF);
+    public Transaction toWithdraw(Account accountToWithdraw, String securityCode, Double value) {
 
         if (accountToWithdraw != null) {
             double balance = accountToWithdraw.getBalance();
@@ -120,9 +116,7 @@ public class AccountService implements AccountRepository {
     }
 
     @Override
-    public Transaction toDeposit(String ownerCPF, String securityCode, double value) {
-        Account accountToDeposit = this.findByOwnerCPF(ownerCPF);
-
+    public Transaction toDeposit(Account accountToDeposit, String securityCode, Double value) {
         if (accountToDeposit != null) {
             double balance = accountToDeposit.getBalance();
             String accountID = accountToDeposit.getAccountID();
@@ -136,13 +130,21 @@ public class AccountService implements AccountRepository {
     }
 
     @Override
-    public Transaction toTransfer(double value, String ownerCPF, String securityCode) {
-        Account accountToTransfer = this.findByOwnerCPF(ownerCPF);
+    public Transaction toTransfer(Account account, Double value, String ownerCPFToTransfer, String securityCode) {
+        Account accountToTransfer = this.findByOwnerCPF(ownerCPFToTransfer);
 
         if (accountToTransfer != null) {
             double balance = accountToTransfer.getBalance();
             String accountID = accountToTransfer.getAccountID();
+            Double accountBalance = account.getBalance();
+
+            if(accountBalance  > value){
+                throw new InvalidParameterException("Saldo insuficiente!");
+            }
+
+            accountBalance -= value;
             balance += value;
+            account.setBalance(accountBalance);
             accountToTransfer.setBalance(balance);
             Transaction transaction = new Transaction(accountID, LocalDateTime.now(), "Transferencia ", value);
             return transaction;

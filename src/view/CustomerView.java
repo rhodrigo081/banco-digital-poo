@@ -4,6 +4,7 @@ import exception.InvalidParameterException;
 import exception.NotFoundException;
 import model.Account;
 import model.Bank;
+import model.Transaction;
 import repository.BankRepository;
 import service.AccountService;
 import service.BankService;
@@ -88,4 +89,29 @@ public class CustomerView {
 
         return loggedAccount;
     }
+
+    public Boolean toDepositView(Account account) {
+
+        System.out.println("Depósito");
+        System.out.println("Insira o valor a ser depositado: ");
+        Double amount = input.nextDouble();
+
+        if(amount <= 0) {
+            throw new InvalidParameterException("O valor deve ser maior que zero!");
+        }
+
+        System.out.println("Digite o código de segurança: ");
+        String securityCode = input.nextLine();
+
+        String correctSecurityCode = account.getSecurityCode();
+
+        if(!securityCode.equals(correctSecurityCode)) {
+            throw new InvalidParameterException("Código Inválido!");
+        }
+
+        accountService.toDeposit(account, securityCode, amount);
+
+        return true;
+    }
+
 }

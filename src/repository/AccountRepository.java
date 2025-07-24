@@ -14,15 +14,15 @@ public interface AccountRepository {
 
     void transactionAdd(Transaction transaction);
 
-    Transaction toWithdraw(String ownerCPF, String securityCode, double value);
+    Transaction toWithdraw(Account account, String securityCode, Double value);
 
-    Transaction toDeposit(String ownerCPF, String securityCode, double value);
+    Transaction toDeposit(Account account, String securityCode, Double value);
 
     Account findByOwnerName(String ownerName);
 
     Account findByOwnerCPF(String ownerCPF);
 
-    Transaction toTransfer(double value, String ownerCPF, String securityCode);
+    Transaction toTransfer(Account account, Double value, String ownerCPF, String securityCode);
 
     List<Transaction> accountStatement(String ownerCPF, String securityCode);
 
