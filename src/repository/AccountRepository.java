@@ -12,8 +12,6 @@ public interface AccountRepository {
 
     Account loginAccount(String ownerCPF, String password, String  securityCode, String bank);
 
-    void transactionAdd(Transaction transaction);
-
     Transaction toWithdraw(Account account, String securityCode, Double value);
 
     Transaction toDeposit(Account account, String securityCode, Double value);
@@ -24,7 +22,7 @@ public interface AccountRepository {
 
     Transaction toTransfer(Account account, Double value, String ownerCPF, String securityCode);
 
-    List<Transaction> accountStatement(String ownerCPF, String securityCode);
+    List<Transaction> accountStatement(Account account);
 
 
 }

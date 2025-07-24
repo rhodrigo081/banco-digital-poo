@@ -9,17 +9,19 @@ import repository.BankRepository;
 import service.AccountService;
 import service.BankService;
 
+import java.util.List;
 import java.util.Scanner;
+
 
 public class CustomerView {
     private static BankRepository bankRepository;
-    private AccountService accountService = new AccountService(bankRepository);
-    private BankService bankService = new BankService();
-    ;
+    private static BankService bankService = new BankService();
+    private AccountService accountService = new AccountService(bankService);
     Scanner input = new Scanner(System.in);
 
     public String bankChooseView() {
 
+        String bankName = null;
         System.out.println("Selecione seu banco: ");
         System.out.println("1 - Nubank");
         System.out.println("2 - Inter");
@@ -27,14 +29,18 @@ public class CustomerView {
         System.out.println("0 - Sair");
         System.out.println("Escolha:");
         Integer option = input.nextInt();
+        input.nextLine();
 
         switch (option) {
             case 1:
-                return "Nubank";
+                bankName = "Nubank";
+                break;
             case 2:
-                return "Inter";
+                bankName = "Inter";
+                break;
             case 3:
-                return "C6";
+                bankName = "C6";
+                break;
             case 0:
                 System.out.println("Saindo...");
                 break;
@@ -42,10 +48,12 @@ public class CustomerView {
                 System.out.println("Opção Inválida!");
                 break;
         }
-        return null;
+        Bank bank = bankService.findByName(bankName);
+
+        return bank.getName();
     }
 
-    public Account accountRegisterView(String associatedBank, String type) {
+    public void accountRegisterView(String associatedBank) {
 
         System.out.println("=================================");
         System.out.println("|\t\t\t  CADASTRO  \t\t\t|");
@@ -68,13 +76,36 @@ public class CustomerView {
             throw new InvalidParameterException("Senhas não são iguais!");
         }
 
+        String type = null;
+        System.out.println("Selecione o tipo da conta:");
+        System.out.println("1 - Corrente");
+        System.out.println("2 - Poupanca");
+        System.out.println("0 - Sair");
+        System.out.println("Escolha:");
+        Integer option = input.nextInt();
+        input.nextLine();
+
+        switch (option) {
+            case 1:
+                type = "corrente";
+                break;
+            case 2:
+                type = "poupanca";
+                break;
+            case 0:
+                System.out.println("Saindo...");
+                break;
+            default:
+                System.out.println("Opção Inválida");
+                break;
+        }
+
         Account registedAccount = accountService.accountCreate(name, cpf, password, associatedBank, type);
 
-        return registedAccount;
+        System.out.println("Conta Criada: \nTitular:" + registedAccount.getOwnerName() + "\nCódigo de segurança: " + registedAccount.getSecurityCode());
     }
 
     public Account accountLoginView(String bankName) {
-
         System.out.println("=================================");
         System.out.println("|\t\t\t  Login  \t\t\t|");
         System.out.println("=================================");
@@ -90,13 +121,43 @@ public class CustomerView {
         return loggedAccount;
     }
 
-    public Boolean toDepositView(Account account) {
+    public void toDepositView(Account account) {
 
-        System.out.println("Depósito");
+        System.out.println("=================================");
+        System.out.println("\t Depósito \t");
+        System.out.println("=================================");
         System.out.println("Insira o valor a ser depositado: ");
         Double amount = input.nextDouble();
+        input.nextLine();
 
-        if(amount <= 0) {
+        if (amount <= 0) {
+            throw new InvalidParameterException("O valor deve ser maior que zero!");
+        }
+
+        System.out.println("Digite o código de segurança: ");
+        String securityCode = input.nextLine();
+
+
+        if (!securityCode.equals(account.getSecurityCode())) {
+            throw new InvalidParameterException("Código Inválido!");
+        }
+
+        Transaction transaction = accountService.toDeposit(account, securityCode, amount);
+
+        System.out.println("Depositó: R$ " + transaction.getValue());
+
+
+    }
+
+    public void toWithdrawView(Account account) {
+        System.out.println("=================================");
+        System.out.println("\t\t Saque \t\t");
+        System.out.println("=================================");
+        System.out.println("Insira o valor a ser sacado: ");
+        Double amount = input.nextDouble();
+        input.nextLine();
+
+        if (amount <= 0) {
             throw new InvalidParameterException("O valor deve ser maior que zero!");
         }
 
@@ -105,13 +166,66 @@ public class CustomerView {
 
         String correctSecurityCode = account.getSecurityCode();
 
-        if(!securityCode.equals(correctSecurityCode)) {
+        if (!securityCode.equals(correctSecurityCode)) {
             throw new InvalidParameterException("Código Inválido!");
         }
 
-        accountService.toDeposit(account, securityCode, amount);
+        Transaction transaction = accountService.toWithdraw(account, securityCode, amount);
 
-        return true;
+        System.out.println("Saque: R$ " + transaction.getValue());
+    }
+
+    public void toTransferView(Account account) {
+        System.out.println("=================================");
+        System.out.println("\t Transferência \t");
+        System.out.println("=================================");
+        System.out.println("Insira o CPF do destinatário: ");
+        String cpf = input.nextLine();
+        System.out.println("Insira o valor: ");
+        Double amount = input.nextDouble();
+        input.nextLine();
+
+        Account accountToTransfer = accountService.findByOwnerCPF(cpf);
+        if (accountToTransfer == null) {
+            throw new NotFoundException("Destinatário não encontrado!");
+        }
+
+        if (amount <= 0) {
+            throw new InvalidParameterException("O valor deve ser maior que zero!");
+        }
+
+        System.out.println("Digite o código de segurança: ");
+        String securityCode = input.nextLine();
+
+        if (!securityCode.equals(account.getSecurityCode())) {
+            throw new InvalidParameterException("Código Inválido!");
+        }
+
+        Transaction transaction = accountService.toTransfer(account, amount, cpf, securityCode);
+
+        System.out.println("Transferência \nDestinatário: " + cpf + "\nValor: R$ " + transaction.getValue());
+    }
+
+    public void accountStatementeView(Account account) {
+
+        System.out.println("=================================");
+        System.out.println("\t Extrato \t");
+        System.out.println("=================================");
+        System.out.println("Digite o código de segurança: ");
+        String securityCode = input.nextLine();
+
+        if (!securityCode.equals(account.getSecurityCode())) {
+            throw new InvalidParameterException("Código de segurança inválido!");
+        }
+
+        List<Transaction> transactions = accountService.accountStatement(account);
+        if (transactions.isEmpty()) {
+            System.out.println("Nenhuma transação encontrada para esta conta.");
+        } else {
+            for (Transaction transaction : transactions) {
+                System.out.println("Tipo: " + transaction.getDescription().trim() + " | Valor: R$ " + transaction.getValue() + " | Data/Hora: " + transaction.getDate());
+            }
+        }
     }
 
 }

@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface BankRepository {
 
+    void bankCreate(Bank bank);
+
     void accountAdd(Account account);
 
     Bank loginBank(String name, String password);

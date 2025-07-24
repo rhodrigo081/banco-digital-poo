@@ -7,9 +7,9 @@ public class Transaction {
     protected String accountID;
     protected LocalDateTime date;
     protected String description;
-    protected double value;
+    protected Double value;
 
-    public Transaction(String accountID, LocalDateTime date, String description, double value) {
+    public Transaction(String accountID, LocalDateTime date, String description, Double value) {
         this.accountID = accountID;
         this.date = date;
         this.description = description;
@@ -18,6 +18,18 @@ public class Transaction {
 
     public String getAccountID() {
         return accountID;
+    }
+
+    public Double getValue(){
+        return value;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
     }
 
 }

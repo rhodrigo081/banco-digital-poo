@@ -1,6 +1,7 @@
 package service;
 
 import exception.InvalidParameterException;
+import exception.ThrowableException;
 import model.Transaction;
 import repository.AccountRepository;
 import repository.TransactionRepository;
@@ -15,21 +16,24 @@ public class TransactionService implements TransactionRepository {
 
     @Override
     public Transaction createTransaction(String accountID, LocalDateTime date, String description, double value) {
-        date = LocalDateTime.now();
+        try {
+            date = LocalDateTime.now();
 
-        if (accountID.isEmpty() || description.isEmpty()) {
-            throw new InvalidParameterException("Todos os campos são obrigatórios!");
+            if (accountID.isEmpty() || description.isEmpty()) {
+                throw new InvalidParameterException("Todos os campos são obrigatórios!");
+            }
+
+            if (value <= 0) {
+                throw new InvalidParameterException("Valor da transação deve ser maior que zero!");
+            }
+
+            Transaction transaction = new Transaction(accountID, date, description, value);
+
+            transactionsList.add(transaction);
+
+            return transaction;
+        } catch (ThrowableException error) {
+            throw new ThrowableException("Erro Interno: " + error.getMessage());
         }
-
-        if (value <= 0) {
-            throw new InvalidParameterException("Valor da transação deve ser maior que zero!");
-        }
-
-        Transaction transaction = new Transaction(accountID, date, description, value);
-
-        transactionsList.add(transaction);
-        accountRepository.transactionAdd(transaction);
-
-        return transaction;
     }
 }
